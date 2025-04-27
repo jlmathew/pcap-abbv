@@ -20,6 +20,9 @@
 std::string getUniqueStreamKey(const u_char *packet, u_int capLen,  packetLayerHelper_t *packetLayerHelper) {
     // Verify that the packet is long enough for an Ethernet header.
     //otherwise, we can segfault when recast as ether_header
+
+    packetLayerHelper->layer2Ptr=packet;
+
     if (capLen < sizeof(struct ether_header)) {
         std::cerr << "Error in size is less than ethernet header minimum" << std::endl;
         return "";

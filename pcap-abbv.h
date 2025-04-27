@@ -41,7 +41,7 @@
 
 //class definition
 struct packetLayerHelper_t {
-    uint16_t layer2Proto=0;
+    int layer2Proto=0;
     uint16_t layer3Proto=0;
     uint16_t layer4Proto=0;
     const uint8_t *layer2Ptr=nullptr;
