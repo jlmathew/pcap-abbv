@@ -33,8 +33,8 @@ int main(int argc, char *argv[]) {
     struct Options_t option;
 
     //test, delete when done
-    option.input = Options_t::FILEINPUT;
-    option.fileName = "../pcap-samples/tcp-ecn-sample.pcap";
+option.input = Options_t::FILEINPUT;
+option.fileName = "../pcap-samples/tcp-ecn-sample.pcap";
 
 //file or real time
 
@@ -72,8 +72,11 @@ int main(int argc, char *argv[]) {
     const u_char *packetData;
     struct pcap_pkthdr *pktHeader;
     int resultTimeout=0;
+    std::map<std::string, PacketInspector_t *> packetsOfInterest;
+    PacketInspector_t * packetFollower;
 
-
+    //do I need pcap_loop(descr, 0, packetHandler, NULL) < 0) for async processing?
+    //this function blocks
     while((resultTimeout = pcap_next_ex( pcapInputStream, &pktHeader, &packetData)) >= 0) {
         if(resultTimeout == 0)
             // Timeout elapsed
@@ -95,15 +98,18 @@ print_dlt(layer2Proto); std::cout << "L3:" << packetLayerHelper->layer3Proto << 
 
 
 //add to existing or create new
+        packetFollower = packetsOfInterest[lookupStreamKey];
 
         //add to existing or create new
+        if (nullptr == packetFollower) {
+        packetFollower = new PacketInspector_t ;}
 
-//Below is done in object
-//triggers to save packets of interest
-//we use 2 buffers, current stream of packets (to capture 'x' packets before and 'y' packets after a tagging event), and those fragments of interest.
-//    tagPacketOfInterest(pcapPacket);
+//stats measure internally in packetFOllower
 
-//        tagPacketOfInterest(packetData);
+//global status (total packets, etc) and update every 1-5 seconds to disk
+
+//write pcap info to disk?   check existing packetstream if too big write to disk
+
 
 
 
@@ -114,20 +120,9 @@ print_dlt(layer2Proto); std::cout << "L3:" << packetLayerHelper->layer3Proto << 
 //ideally, we should create a thread to handle key creation, and per stream/thread for packet processing (up to n threads)
 //The create key, for a unique key, is large and gigantic when ipv6 is considered.
 //Marking this as a TODO, but for now, single thread processing
+        packetFollower->updateInterest(pktHeader, packetData,packetLayerHelper_t);
 
 
-
-
-    //add to existing or create new
-
-//Below is done in object
-//triggers to save packets of interest
-//we use 2 buffers, current stream of packets (to capture 'x' packets before and 'y' packets after a tagging event), and those fragments of interest.
-
-//        tagPacketOfInterest(packetData);
-
-
-//trigger to save pcap
 
 
 //continue to save in memory, or write to disk as temporary

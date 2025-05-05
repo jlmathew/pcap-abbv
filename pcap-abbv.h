@@ -19,6 +19,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h> // For STDIN_FILENO
+#include <list>
+#include <algorithm>
 
 //packet header includes
 #include <arpa/inet.h>
@@ -55,14 +57,42 @@ struct packetLayerHelper_t {
 
 struct CapturedPacket_t {
     //PcapRecordHeader recordHeader;
-    pcap_pkthdr *pktHdrInfo; //time, length of packet
+    pcap_pkthdr pktHdrInfo; //time, length of packet
     std::vector<uint8_t> data;
-    std::string lookUpName;
     packetLayerHelper_t *layerHelper;
+};
+
+//track all packets of interest
+class PacketInspector_t {
+    std::list<struct CapturedPacket_t> m_packetOfInterestList;
+    std::list<struct CapturedPacket_t> m_preTriggerPackets;
+    int m_threadIndex=-1;
+    std::string m_fileName;  //filename to save
+    std::string m_lookUpName;
+    //count of how many packets to save after trigger
+    uint32_t m_postTriggerPacketSave;
+    //count of prepackets to save before a trigger
+    uint32_t m_preTriggerPacketSave;
+    //how many packets to hold internally before flushing to disk
+    uint32_t m_flushToDiskThresshold;
+    //we will be saving this
+    bool m_savePktStream;
+    long double m_numBytesSaved;
+
+    //error message, since we may be multithreading
+
+    //if we flush to disk, and dont save packets, we delete the file
+
+
+};
+
+class PacketStatistics_t {
+    u_int64_t m_numberPackets;
 };
 
 struct Options_t {
     int input;
+    //need options for L2, L3, L4, etc
 
     std::string fileName;
     enum inputType {
