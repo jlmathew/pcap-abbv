@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1750634443 source:/home/fallenangel/git-repo/pcap-abbv/parser/ast parser/main.cpp
+	<iostream>
+	<string>
+	<vector>
+	<memory>
+	<map>
+	<functional>
+	<sstream>
+	<cctype>
+	<stdexcept>
+
