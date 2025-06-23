@@ -152,7 +152,9 @@ struct ComparisonNode : ASTNode
         {
             if (auto val = dynamic_pointer_cast<ValueNode>(node)) return val->getValue();
             if (auto fn = dynamic_pointer_cast<FuncNode>(node)) return fn->getValue();
-            throw runtime_error("Invalid comparison operand");
+            // NEW: also allow wrapped logical expressions to resolve to bool -> int
+            return node->evaluate() ? 1 : 0;
+            //throw runtime_error("Invalid comparison operand"); Unsure if we wish to compare boolean (true/false) to ints
         };
         int lhs = getVal(left);
         int rhs = getVal(right);
@@ -281,97 +283,7 @@ struct Token
     tokens.push_back({TOKEN_END, ""});
     return tokens;
 }
-//prior tokenize, made mistakes on parenthesis matching
-/*
-vector<Token> tokenize(const string& input)
-{
-    vector<Token> tokens;
-    size_t i = 0;
-    while (i < input.size())
-    {
-        if (isspace(input[i]))
-        {
-            ++i;
-            continue;
-        }
 
-        if (input[i] == '(') tokens.push_back({TOKEN_LPAREN, "("}), ++i;
-        else if (input[i] == ')') tokens.push_back({TOKEN_RPAREN, ")" }), ++i;
-        else if (input[i] == '!')
-        {
-            if (i + 1 < input.size() && input[i + 1] == '=')
-            {
-                tokens.push_back({TOKEN_NEQ, "!="});
-                i += 2;
-            }
-            else tokens.push_back({TOKEN_NOT, "!"}), ++i;
-        }
-        else if (input[i] == '=')
-        {
-            if (i + 1 < input.size() && input[i + 1] == '=')
-            {
-                tokens.push_back({TOKEN_EQ, "=="});
-                i += 2;
-            }
-            else throw runtime_error("Expected '=='");
-        }
-        else if (input[i] == '>')
-        {
-            if (i + 1 < input.size() && input[i + 1] == '=')
-            {
-                tokens.push_back({TOKEN_GTE, ">="});
-                i += 2;
-            }
-            else tokens.push_back({TOKEN_GT, ">"}), ++i;
-        }
-        else if (input[i] == '<')
-        {
-            if (i + 1 < input.size() && input[i + 1] == '=')
-            {
-                tokens.push_back({TOKEN_LTE, "<="});
-                i += 2;
-            }
-            else tokens.push_back({TOKEN_LT, "<"}), ++i;
-        }
-        else if (isdigit(input[i]))
-        {
-            size_t j = i;
-            while (j < input.size() && isdigit(input[j])) ++j;
-            tokens.push_back({TOKEN_NUM, input.substr(i, j - i)});
-            i = j;
-        }
-        else if (isalpha(input[i]))
-        {
-            size_t j = i;
-            while (j < input.size() && (isalnum(input[j]) || input[j] == '_')) ++j;
-            string word = input.substr(i, j - i);
-            if (word == "AND") tokens.push_back({TOKEN_AND, "AND"});
-            else if (word == "OR") tokens.push_back({TOKEN_OR, "OR"});
-            else
-            {
-                if (j < input.size() && input[j] == '(')
-                {
-                    size_t k = j;
-                    int parens = 1;
-                    while (++k < input.size() && parens > 0)
-                    {
-                        if (input[k] == '(') ++parens;
-                        else if (input[k] == ')') --parens;
-                    }
-                    tokens.push_back({TOKEN_FUNC, input.substr(i, k - i + 1)});
-                    i = k + 1;
-                    continue;
-                }
-                else throw runtime_error("Unknown identifier: " + word);
-            }
-            i = j;
-        }
-        else throw runtime_error("Unexpected character: " + string(1, input[i]));
-    }
-    tokens.push_back({TOKEN_END, ""});
-    return tokens;
-}
-*/
 
 // ===== Parser =====
 class Parser
@@ -502,7 +414,7 @@ int main()
 {
     vector<string> testInputs =
     {
-/*        "isEven(4)",                             // true
+        "isEven(4)",                             // true
         "isEven(5)",                             // false
         "!isPositive(-3)",                       // true
         "alwaysTrue() AND alwaysFalse()",        // false
@@ -518,8 +430,9 @@ int main()
         "fn3() == 9", //true
         "!(fn3() == 9)", //false
         "!(fn3() == 8)", //true
-        "fn3() != fn1(9) OR fn2(3) == fn1(3)", */
-        "(!fn3()) == 8"  //false
+        "fn3() != fn1(9) OR fn2(3) == fn1(3)",
+        "(!fn3()) == 8",  //false
+        "(((fn3())) == 8)" //false
     };
 
     for (const auto& input : testInputs)
